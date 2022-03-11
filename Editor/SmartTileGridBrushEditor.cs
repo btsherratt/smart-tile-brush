@@ -9,6 +9,22 @@ namespace SmartTileBrush {
     public class SmartTileGridBrushEditor : GridBrushEditor {
         SmartTileGridBrush smartTileGridBrush => (SmartTileGridBrush)brush;
 
+        /*public override void OnInspectorGUI() {
+            m_currentTool = GUILayout.Toolbar(m_currentTool, new string[] { "Tiles", "Prefabs" });
+
+            switch (m_currentTool) {
+                case 0:
+                    base.OnInspectorGUI();
+                    break;
+
+                case 1:
+                    break;
+
+                default:
+                    break;
+            }
+        }*/
+
         public override void OnSelectionInspectorGUI() {
             base.OnSelectionInspectorGUI();
 
@@ -97,15 +113,21 @@ namespace SmartTileBrush {
         }
 
         public override void PaintPreview(GridLayout gridLayout, GameObject brushTarget, Vector3Int position) {
-            base.PaintPreview(gridLayout, GetPreviewBrushTarget(gridLayout), position);
+            if (smartTileGridBrush.m_mode == SmartTileGridBrush.Mode.Tiles) {
+                base.PaintPreview(gridLayout, GetPreviewBrushTarget(gridLayout), position);
+            }
         }
 
         public override void BoxFillPreview(GridLayout gridLayout, GameObject brushTarget, BoundsInt position) {
-            base.BoxFillPreview(gridLayout, GetPreviewBrushTarget(gridLayout), position);
+            if (smartTileGridBrush.m_mode == SmartTileGridBrush.Mode.Tiles) {
+                base.BoxFillPreview(gridLayout, GetPreviewBrushTarget(gridLayout), position);
+            }
         }
 
         public override void FloodFillPreview(GridLayout gridLayout, GameObject brushTarget, Vector3Int position) {
-            base.FloodFillPreview(gridLayout, GetPreviewBrushTarget(gridLayout), position);
+            if (smartTileGridBrush.m_mode == SmartTileGridBrush.Mode.Tiles) {
+                base.FloodFillPreview(gridLayout, GetPreviewBrushTarget(gridLayout), position);
+            }
         }
 
         protected GameObject GetPreviewBrushTarget(GridLayout gridLayout) {

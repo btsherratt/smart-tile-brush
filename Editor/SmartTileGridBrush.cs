@@ -1,11 +1,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEditor;
 using UnityEditor.Tilemaps;
 
 namespace SmartTileBrush {
     [CustomGridBrush(true, false, false, "Smart Brush")]
     public class SmartTileGridBrush : GridBrush {
+        public enum Mode {
+            Tiles,
+            Prefabs,
+        }
+
+        public Mode m_mode;
+
         public SmartTileGroupCollection m_tileGroupCollection;
 
         /*public override void Select(GridLayout gridLayout, GameObject brushTarget, BoundsInt position) {
@@ -25,10 +33,40 @@ namespace SmartTileBrush {
         }*/ // NB: implemented using BoxErase
 
         public override void BoxFill(GridLayout gridLayout, GameObject brushTarget, BoundsInt position) {
+            switch (m_mode) {
+                case Mode.Tiles:
+                    TilesBoxFill(gridLayout, brushTarget, position);
+                    break;
+
+                case Mode.Prefabs:
+                    PrefabsBoxFill(gridLayout, brushTarget, position);
+                    break;
+            }
+        }
+
+        void TilesBoxFill(GridLayout gridLayout, GameObject brushTarget, BoundsInt position) {
             BoundsInt safePosition;
             foreach (GameObject trueTarget in GetTrueBrushTargets(out safePosition, gridLayout, position, cells, true)) {
                 base.BoxFill(gridLayout, trueTarget, safePosition);
             }
+        }
+
+        void PrefabsBoxFill(GridLayout gridLayout, GameObject brushTarget, BoundsInt position) {
+            foreach (GameObject selectedPrefab in Selection.GetFiltered<GameObject>(SelectionMode.Assets)) {
+                BoundsInt safePosition;
+                SmartTileRoom room = GetTargetRoom(out safePosition, gridLayout, position);
+                if (room != null) {
+                    foreach (Vector3Int p in safePosition.allPositionsWithin) {
+                        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(selectedPrefab, room.transform);
+                        Vector3 localInstancePosition = gridLayout.CellToLocalInterpolated(p + Vector3.one * 0.5f);
+                        Vector3 instancePosition = gridLayout.LocalToWorld(localInstancePosition);
+                        instance.transform.SetPositionAndRotation(instancePosition, Quaternion.identity);
+                        Undo.RegisterCreatedObjectUndo(instance, "Paint GameObject");
+                    }
+                }
+            }
+
+            // ...
         }
 
         public override void BoxErase(GridLayout gridLayout, GameObject brushTarget, BoundsInt position) {
